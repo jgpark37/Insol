@@ -39,7 +39,11 @@ source
 #define USE_PULLUP								1 		//reduce nois than floating
 
 #define LED_ADC_RUN_BLINK 				HAL_GPIO_TogglePin(GPIOB, LED_ORANGE)
+#define LED_ADC_RUN_OFF 				HAL_GPIO_WritePin(GPIOB, LED_ORANGE, SET)
 #define LED_CAN_TX_BLINK 				HAL_GPIO_TogglePin(GPIOB, LED_GREEN)
+#define LED_CAN_TX_OFF 					HAL_GPIO_WritePin(GPIOB, LED_GREEN, SET)
+#define LED_CAN_TX_ON 					HAL_GPIO_WritePin(GPIOB, LED_GREEN, RESET)
+
 /* Private typedef -----------------------------------------------------------*/
 struct _tagSETUP_INFO{	//셋업(옵션)창의 변수 저장
 	uint32_t canRxID;					
@@ -79,6 +83,7 @@ const char MODEL_t[MODEL_LENGTH] = {"INSOL"};
 //const uint8_t CREATE_TIME[3] = {16, 31, 55};	//hour, min, sec
 
 extern ADC_HandleTypeDef hadc1;
+extern IWDG_HandleTypeDef hiwdg;
 
 
 /* Private function prototypes -----------------------------------------------*/
@@ -91,32 +96,15 @@ void ADCDrv_Init(void)
 {
 	GPIO_InitTypeDef GPIO_InitStruct;
 
-	GPIO_InitStruct.Pin = GPIO_PIN_3;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
-	//HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);
-	GPIO_InitStruct.Pin = GPIO_PIN_4;
-	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6;
+	//GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT;
+ 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
+  	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-	//HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
-	GPIO_InitStruct.Pin = GPIO_PIN_5;
-	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-	//HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
-	GPIO_InitStruct.Pin = GPIO_PIN_6;
-	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-	//HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
-	GPIO_InitStruct.Pin = GPIO_PIN_7;
-	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);	
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);	
 
 }
 
@@ -166,14 +154,13 @@ void ADCDrv_Copy2Buf()
 	switch (Insol.sourcePos) {
 	case 0: //GPIO1
 		if (!Insol.data.processType) {		
-			Insol.sensorValueBuf[0] = AdcDmaBuf[1];
+			Insol.sensorValueBuf[0] = AdcDmaBuf[1]; //A1/G1
 			Insol.sensorValueBuf[1] = AdcDmaBuf[2];
 			Insol.sensorValueBuf[2] = AdcDmaBuf[3];
 			Insol.sensorValueBuf[3] = AdcDmaBuf[4];
 			Insol.sensorValueBuf[4] = AdcDmaBuf[5];
 		}
-
-		if (Insol.data.processType&0x80) {	
+		else if (Insol.data.processType&0x80) {	
 			if (AdcCalBuf[0] > AdcDmaBuf[1]) 
 				temp = AdcCalBuf[0] - AdcDmaBuf[1];
 			else temp = 0;
@@ -195,8 +182,7 @@ void ADCDrv_Copy2Buf()
 			else temp = 0;
 			Insol.sensorValueBuf[4] = temp;
 		}
-
-		if (Insol.data.processType&0x40) {
+		else if (Insol.data.processType&0x40) {
 			Insol.sensorValueBuf[0] = ForceConstant[0]/AdcDmaBuf[1];
 			Insol.sensorValueBuf[1] = ForceConstant[1]/AdcDmaBuf[2];
 			Insol.sensorValueBuf[2] = ForceConstant[2]/AdcDmaBuf[3];
@@ -206,12 +192,11 @@ void ADCDrv_Copy2Buf()
 		break;
 	case 1: //GPIO2
 		if (!Insol.data.processType) {		
-			Insol.sensorValueBuf[5] = AdcDmaBuf[1];
+			Insol.sensorValueBuf[5] = AdcDmaBuf[1]; //A1/G2
 			Insol.sensorValueBuf[6] = AdcDmaBuf[2];
 			Insol.sensorValueBuf[7] = AdcDmaBuf[3];
 		}
-
-		if (Insol.data.processType&0x80) {	
+		else if (Insol.data.processType&0x80) {	
 			if (AdcCalBuf[5] > AdcDmaBuf[1]) 
 				temp = AdcCalBuf[5] - AdcDmaBuf[1];
 			else temp = 0;
@@ -225,8 +210,7 @@ void ADCDrv_Copy2Buf()
 			else temp = 0;
 			Insol.sensorValueBuf[7] = temp;
 		}
-
-		if (Insol.data.processType&0x40) {
+		else if (Insol.data.processType&0x40) {
 			Insol.sensorValueBuf[5] = ForceConstant[5]/AdcDmaBuf[1];
 			Insol.sensorValueBuf[6] = ForceConstant[6]/AdcDmaBuf[2];
 			Insol.sensorValueBuf[7] = ForceConstant[7]/AdcDmaBuf[3];
@@ -240,8 +224,7 @@ void ADCDrv_Copy2Buf()
 			Insol.sensorValueBuf[11] = AdcDmaBuf[6];
 			Insol.sensorValueBuf[12] = AdcDmaBuf[7];
 		}
-
-		 if (Insol.data.processType&0x80) {	
+		else if (Insol.data.processType&0x80) {	
 			if (AdcCalBuf[8] > AdcDmaBuf[3]) 
 				temp = AdcCalBuf[8] - AdcDmaBuf[3];
 			else temp = 0;
@@ -263,8 +246,7 @@ void ADCDrv_Copy2Buf()
 			else temp = 0;
 			Insol.sensorValueBuf[12] = temp;
 		}
-
-		if (Insol.data.processType&0x40) {
+		else if (Insol.data.processType&0x40) {
 			Insol.sensorValueBuf[8] = ForceConstant[8]/AdcDmaBuf[3];
 			Insol.sensorValueBuf[9] = ForceConstant[9]/AdcDmaBuf[4];
 			Insol.sensorValueBuf[10] = ForceConstant[10]/AdcDmaBuf[5];
@@ -279,8 +261,7 @@ void ADCDrv_Copy2Buf()
 			Insol.sensorValueBuf[15] = AdcDmaBuf[6];
 			Insol.sensorValueBuf[16] = AdcDmaBuf[7];
 		}
-
-		 if (Insol.data.processType&0x80) {	
+		else  if (Insol.data.processType&0x80) {	
 			if (AdcCalBuf[13] > AdcDmaBuf[4]) 
 				temp = AdcCalBuf[13] - AdcDmaBuf[4];
 			else temp = 0;
@@ -298,8 +279,7 @@ void ADCDrv_Copy2Buf()
 			else temp = 0;
 			Insol.sensorValueBuf[16] = temp;
 		}
-
-		if (Insol.data.processType&0x40) {
+		else if (Insol.data.processType&0x40) {
 			Insol.sensorValueBuf[13] = ForceConstant[13]/AdcDmaBuf[4];
 			Insol.sensorValueBuf[14] = ForceConstant[14]/AdcDmaBuf[5];
 			Insol.sensorValueBuf[15] = ForceConstant[15]/AdcDmaBuf[6];
@@ -313,8 +293,7 @@ void ADCDrv_Copy2Buf()
 			Insol.sensorValueBuf[19] = AdcDmaBuf[6];
 			Insol.sensorValueBuf[20] = AdcDmaBuf[7];
 		}
-
-		 if (Insol.data.processType&0x80) {	
+		else if (Insol.data.processType&0x80) {	
 			if (AdcCalBuf[17] > AdcDmaBuf[4]) 
 				temp = AdcCalBuf[17] - AdcDmaBuf[4];
 			else temp = 0;
@@ -332,8 +311,7 @@ void ADCDrv_Copy2Buf()
 			else temp = 0;
 			Insol.sensorValueBuf[20] = temp;
 		}
-
-		if (Insol.data.processType&0x40) {
+		else if (Insol.data.processType&0x40) {
 			Insol.sensorValueBuf[17] = ForceConstant[17]/AdcDmaBuf[4];
 			Insol.sensorValueBuf[18] = ForceConstant[18]/AdcDmaBuf[5];
 			Insol.sensorValueBuf[19] = ForceConstant[19]/AdcDmaBuf[6];
@@ -347,6 +325,40 @@ void ADCDrv_Copy2Buf()
 
 void ADCDrv_SelectSensorSource(void)
 {
+#ifdef SUPPORT_HW_V1_2
+	Insol.sourcePos++;
+	if (Insol.sourcePos >= INSOL_SOURCE_TOTLAL_NUM) Insol.sourcePos = 0;
+
+	switch (Insol.sourcePos) {
+	case 0:
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);	//S3
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);	//S2
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);	//S1
+		break;
+	case 1:
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);	//S3
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);	//S2
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);		//S1
+		break;
+	case 2:
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);	//S3
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);		//S2
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);	//S1
+		break;
+	case 3:
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);	//S3
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);		//S2
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_SET);		//S1
+		break;
+	case 4:
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);		//S3
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);	//S2
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4, GPIO_PIN_RESET);	//S1
+		break;
+	default:
+		break;
+	}
+#else	//h/w ver1.0
 	GPIO_InitTypeDef GPIO_InitStruct;
 
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
@@ -443,6 +455,8 @@ void ADCDrv_SelectSensorSource(void)
 		break;
 	}
 
+#endif
+
 	//LED_CAN_TX_BLINK;
 }
 
@@ -463,7 +477,9 @@ void Insol_RunMode_Calibration(void)
 					Insol_SetRunMode(RM_STANDBY);
 					return;
 				}
+				HAL_IWDG_Refresh(&hiwdg);
 			}
+			HAL_IWDG_Refresh(&hiwdg);
 			Insol.adc.complete = 0;
 			HAL_ADC_Start_DMA(&hadc1,(uint32_t *)&AdcDmaBuf[1], NumOfAdcChan );
 		}
@@ -490,9 +506,11 @@ void Insol_RunMode_Normal_12bit(void)
 
 	if (InsolTimer.tick < Insol.data.sendTime) return;
 	
-	if (Insol.data.outputType&0x02) {
+	if (Insol.data.outputType&DOT_UART) {
 		//if (!Insol.sendOrder) 
-		{	
+		{
+#if 1		
+			#if 1 //21 sensor data send
 			printf("%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,\r\n", 
 				Insol.sensorValueBuf[0], Insol.sensorValueBuf[1],
 				Insol.sensorValueBuf[2], Insol.sensorValueBuf[3],
@@ -507,13 +525,30 @@ void Insol_RunMode_Normal_12bit(void)
 				Insol.sensorValueBuf[17], Insol.sensorValueBuf[18], 
 				Insol.sensorValueBuf[19], Insol.sensorValueBuf[20] 
 				);
+			#else //5 sensor data send
+			printf("%d,%d\r\n", 
+				4096-Insol.sensorValueBuf[0], 
+				//4096-Insol.sensorValueBuf[5], 
+				//4096-Insol.sensorValueBuf[8],
+				//4096-Insol.sensorValueBuf[13], 
+				4096-Insol.sensorValueBuf[18]
+				);
+			#endif
+			Insol.led.canCnt++;
+			if (Insol.led.canCnt > LED_CAN_TX_BLINK_TIME) {
+				LED_CAN_TX_BLINK;
+				Insol.led.canCnt = 0;
+			}
+#endif
 		}
 		InsolTimer.tick = 0;
 	}
 
 	
 	Insol.can.rv = 0;
-	if (Insol.data.outputType&0x01) {
+	if (Insol.data.outputType&DOT_CAN) {
+		//if (Insol.can.complete > 0) Insol.can.complete--;    
+		//if (Insol.can.complete != 0) return;
 		CANDrv_SetStdID(Insol.can.txid + Insol.sendOrder);
 
 		for (i = (Insol.sendOrder<<2); i < (Insol.sendOrder<<2) + (CanInfo.tx.cnt>>1); i++) {
@@ -522,7 +557,7 @@ void Insol_RunMode_Normal_12bit(void)
 		}
 		
 		Insol.can.rv = CANDrv_WriteFile(CanInfo.tx.buf + (Insol.sendOrder<<3), CanInfo.tx.cnt);
-
+		//if (!Insol.can.rv) return;
 		Insol.sendOrder++;
 		//if (Insol.sendOrder > INSOL_SOURCE_TOTLAL_NUM) Insol.sendOrder = 0;
 		
@@ -550,10 +585,11 @@ void Insol_RunMode_Normal_12bit(void)
 			LED_CAN_TX_BLINK;
 			Insol.led.canCnt = 0;
 		}
+		InsolTimer.tick = 0;
 	}
 	
 	if (Insol.can.rv == -1) {
-		Insol.data.sendTimeBackup = Insol.data.sendTime;
+		if (!Insol.data.sendTimeBackup) Insol.data.sendTimeBackup = Insol.data.sendTime;
 		Insol.data.sendTime = CAN_ERR_RECHECK_TIME;
 	}
 	else {
@@ -578,7 +614,7 @@ void Insol_RunMode_Normal_8bit(void)
 
 	if (InsolTimer.tick < Insol.data.sendTime) return;
 	
-	if (Insol.data.outputType&0x02) {
+	if (Insol.data.outputType&DOT_UART) {
 		//if (!Insol.sendOrder) 
 		{	
 			printf("%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,\r\n", 
@@ -601,7 +637,7 @@ void Insol_RunMode_Normal_8bit(void)
 
 	
 	Insol.can.rv = 0;
-	if (Insol.data.outputType&0x01) {
+	if (Insol.data.outputType&DOT_CAN) {
 
 		CANDrv_SetStdID(Insol.can.txid + Insol.sendOrder);
 
@@ -667,7 +703,7 @@ void Insol_RunMode_Normal_4bit(void)
 
 	if (InsolTimer.tick < Insol.data.sendTime) return;
 	
-	if (Insol.data.outputType&0x02) {
+	if (Insol.data.outputType&DOT_UART) {
 		//if (!Insol.sendOrder) 
 		{	
 			printf("%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,\r\n", 
@@ -690,7 +726,7 @@ void Insol_RunMode_Normal_4bit(void)
 
 	
 	Insol.can.rv = 0;
-	if (Insol.data.outputType&0x01) {
+	if (Insol.data.outputType&DOT_CAN) {
 
 		CANDrv_SetStdID(Insol.can.txid + Insol.sendOrder);
 		
@@ -762,6 +798,8 @@ void Insol_SetRunMode(uint8_t runmode)
 		fnADCDrv_Copy2Buf = ADCDrv_Copy2Buf;
 		fnInsol_RunMode = Insol_RunMode_Standby;
 		//HAL_ADC_Stop_DMA(&hadc1);
+		LED_ADC_RUN_OFF;
+		LED_CAN_TX_OFF;
 		break;
 	case RM_NORMAL_4BIT:
 		//Insol.runMode = RM_NORMAL_4BIT;
@@ -1016,6 +1054,9 @@ void Insol_Init(void)
 {
 	int i;
 	
+	LED_ADC_RUN_BLINK;
+	LED_CAN_TX_BLINK;
+
 	Insol.sendOrder = 0;
 	Insol.led.adcCnt = 0;
 	Insol.led.canCnt = 0;
@@ -1023,17 +1064,22 @@ void Insol_Init(void)
 	Insol.data.sendTimeBackup = 0;
 	fnInsol_RunMode = Insol_RunMode_Standby;
 	Insol.runMode = Insol.oldRunMode = RM_STANDBY;
+	#ifdef SUPPORT_UART_PRINT
+	Insol.data.outputType = DOT_UART;
+	#else
 	Insol.data.outputType = DOT_CAN;
+	#endif
 
-	//Insol.data.outputType = DOT_UART;
 	//Insol.data.sendTime = 50;
-
-	//Insol.data.size = DS_8BIT;
+	#ifdef SUPPORT_ALL_SENSOR
 	Insol.data.size = DS_12BIT;
-	Insol.data.shift = 4;	//256 level
 	Insol.sensorONPos = 0x001fffff; // all sensor
-	//Insol.sensorONPos = 0x001e0087;	//for h4
+	#else
+	Insol.data.size = DS_8BIT;	//for h4
+	Insol.sensorONPos = 0x001e0087;	//for h4
 	//Insol.sensorONPos = 0x0000000f;
+	#endif
+	Insol.data.shift = 4;	//256 level
 	Insol_SetBufPtr(Insol.data.size, Insol.sensorONPos);
 	if (Insol.sensorONNum < 9) {
 		CanInfo.tx.cnt = Insol.sensorONNum;
@@ -1047,6 +1093,9 @@ void Insol_Init(void)
 	for (i = 0; i < INSOL_SENSOR_NUM; i++) {
 		ForceConstant[i] = 1;
 	}
+
+	LED_ADC_RUN_OFF;
+	LED_CAN_TX_ON;
 	
 #ifdef SUPPORT_MCU_FLASH
 	FlashDrv_SetTempBuf(&CommonBuf[FLASH_PAGE_SIZE1]);

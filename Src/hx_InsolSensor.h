@@ -32,11 +32,15 @@
 //#include "stm32f4xx.h"
 
 /* Private define ------------------------------------------------------------*/
-#define CAN_RX_BUF_NUM		(20)
+//#define SUPPORT_HW_V1_2				//180408
+//#define SUPPORT_UART_PRINT
+#define SUPPORT_ALL_SENSOR
+
+#define CAN_RX_BUF_NUM			(20)
 //#define CAN_TX_BUF_NUM			(21)
-#define CAN_DATA_SEND_NUM		6
-#define NumOfAdcChan 			7 // num of scanned ADC channels
-#define DMABUFSIZE 				NumOfAdcChan + 2 // total elements of DMABuf-Array
+#define CAN_DATA_SEND_NUM			6
+#define NumOfAdcChan 				7 // num of scanned ADC channels
+#define DMABUFSIZE 					NumOfAdcChan + 2 // total elements of DMABuf-Array
 
 #define INSOL_SOURCE_TOTLAL_NUM		5
 #define INSOL_SOURCE1_NUM				5
@@ -56,14 +60,15 @@
 
 #define COMPANY_LENGTH				14
 #define MODEL_LENGTH					10
-#define FW_VER						0x12	//v1.0
-#define HW_VER						0x01	//v0.1(17.03.19)
-#define FW_USER						'H'		//user : hexar
-#define FW_CREATE_YEAR				17
-#define FW_CREATE_MONTH			4
-#define FW_CREATE_DAY				17
-#define FW_CREATE_HOUR			15
-#define FW_CREATE_MIN				59
+#define FW_VER							0x03	//v1.0
+#define HW_VER							0x02	//v0.2(18.04.17)
+#define FW_USER							'H'		//user : hexar
+#define FW_CREATE_YEAR					18
+#define FW_CREATE_MONTH				4
+#define FW_CREATE_DAY					17
+#define FW_CREATE_HOUR				9
+#define FW_CREATE_MIN					34
+
 //extern const char COMPANY_t[COMPANY_LENGTH];// = {"HEXAR SYSTEMS"};
 //extern const char MODEL_t[MODEL_LENGTH];// = {"INSOL"};
 //extern const uint8_t FW_VER[4];// = {'1', '0', 'K', 'G'};		//v1.0.KG
@@ -117,7 +122,7 @@ typedef struct tag_INSOL{
 		//uint16_t chkTime;
 		int rv;
 		uint8_t timeout;
-		uint8_t complete;
+		uint32_t complete;
 	}can;
 	struct {
 		uint8_t ok;
@@ -166,9 +171,9 @@ enum _RUN_MODE {
 
 enum _DATA_OUTPUT_TYPE {
 	DOT_NONE,
-	DOT_CAN,
-	DOT_UART,
-	DOT_CAN_UART
+	DOT_CAN			= 0x01,
+	DOT_UART			= 0x02,
+	DOT_CAN_UART		= 0x03
 };
 
 enum _DATA_SIZE {

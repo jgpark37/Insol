@@ -60,9 +60,6 @@ int CANDrv_WriteFile(uint8_t *buf, uint8_t cnt)
 	int i;
 	HAL_CAN_StateTypeDef status;
 
-	//if (Insol.can.complete == 0) return 0;
-	//while (hcan.State == HAL_CAN_STATE_BUSY);
-	
 	//if (hcan.Lock == HAL_LOCKED) return 0;
 //	if (cnt > 4) return;
 	status = HAL_CAN_GetState(&hcan);
@@ -95,6 +92,15 @@ int CANDrv_WriteFile(uint8_t *buf, uint8_t cnt)
 		return 0;
 	}
 	
+	//if (hcan.State != HAL_CAN_STATE_READY) {
+	//	HAL_Delay(1);
+	//	return 0;
+	//}
+	//if (hcan.Lock == HAL_LOCKED) {
+	//	HAL_Delay(1);
+	//	return 0;
+	//}
+	
 	//hcan.pTxMsg->StdId = cmdID;
 	
 	//pbuf = (uint16_t *)hcan.pTxMsg->Data;
@@ -103,7 +109,7 @@ int CANDrv_WriteFile(uint8_t *buf, uint8_t cnt)
 	}
 	hcan.pTxMsg->DLC = cnt;
 	/*##-3- Start the Transmission process ###############################*/
-	Insol.can.complete = 0;
+	//Insol.can.complete = 10;
 	//if (HAL_CAN_Transmit_IT(&hcan) != HAL_OK)
 	if (HAL_CAN_Transmit(&hcan, 10) != HAL_OK)
 	{
@@ -112,6 +118,7 @@ int CANDrv_WriteFile(uint8_t *buf, uint8_t cnt)
 		return -1;
 	}
 
+	//HAL_Delay(1); 
 	Insol.can.timeout = 0;
 	Insol.led.canCnt++;
 	return 1;
@@ -178,7 +185,7 @@ void CANDrv_Init(void)
 	Insol.can.timeout = 0;
 	Insol.can.txid = CAN_TX_STD_ID&0x7FF;
 	Insol.can.rxid = CAN_RX_STD_ID&0x7FF;
-	Insol.can.complete = 0;
+	Insol.can.complete = 1;
 	
 	CanInfo.rx.head = 0;
 	CanInfo.rx.tail = 0;

@@ -98,6 +98,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef * htim)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef * huart)
 {
+	Insol.led.adcCnt++;
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
@@ -109,11 +110,11 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 	fnADCDrv_Copy2Buf();
 	Insol.adc.complete = 1;
 	ADCDrv_SelectSensorSource();
-	//for (i = 0 ; i < 200000; i++);
 	if (Insol.runMode > RM_CALIBRATION) {
 		HAL_ADC_Start_DMA(&hadc1,(uint32_t *)&AdcDmaBuf[1], NumOfAdcChan );
 		//Insol.adc.complete = 0;
 	}
+	//HAL_GPIO_TogglePin(GPIOB, LED_ORANGE);
 }
 
 /**
@@ -149,7 +150,9 @@ void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef *hcan)
 
 void HAL_CAN_TxCpltCallback(CAN_HandleTypeDef* hcan)
 {
-	Insol.can.complete = 1;
+	if (hcan->Instance == CAN1) {
+		if (hcan->State == HAL_CAN_STATE_READY) Insol.can.complete = 1;
+	}
 }
 
 /* USER CODE END 0 */
@@ -188,8 +191,10 @@ int main(void)
 	
 	ADCDrv_Init();
 	Insol_RunMode_Calibration();
-	//Insol_SetRunMode(RM_NORMAL_12BIT);
-	//Insol_SetBufPtr(DS_8BIT, Insol.sensorONPos);
+	//#ifdef SUPPORT_UART_PRINT
+	Insol_SetRunMode(RM_NORMAL_12BIT);
+	//Insol_SetRunMode(RM_NORMAL_8BIT);
+	//#endif
 	CANDrv_Init();
 	Insol_Print2Uart_SystemInfo();
   /* USER CODE END 2 */
@@ -307,7 +312,7 @@ static void MX_ADC1_Init(void)
     */
   sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_71CYCLES_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;//ADC_SAMPLETIME_71CYCLES_5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -444,7 +449,7 @@ static void MX_USART1_UART_Init(void)
 {
 
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
+  huart1.Init.BaudRate = 115200;//230400
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;

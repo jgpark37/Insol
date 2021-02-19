@@ -2,7 +2,7 @@
 
 #define	CAN_OPEN_DSP402										0x00020192		//	Draft Standard Proposal 402
 
-#define	CAN_OPEN_CONTROL									0x6040	//	Unsigned 16bit, RW
+#define	CAN_OPEN_CONTROL									0x6040, 0x00	//	Unsigned 16bit, RW
 	#define	CAN_OPEN_SWITCH_ON									0x0001
 	#define	CAN_OPEN_ENABLE_VOLTAGE								0x0002
 	#define	CAN_OPEN_QUICK_STOP									0x0004
@@ -20,7 +20,7 @@
 	#define	CAN_OPEN_SET_DATA_PROC_TYPE							0x0019
 	#define	CAN_OPEN_SET_DATA_OUTPUT_TYPE						0x001A
 	#define	CAN_OPEN_SEL_SENSOR_POS								0x001B
-
+	//CIA_402
 	#define	CAN_OPEN_CONTROL_SHUTDOWN							0x0006
 	#define	CAN_OPEN_CONTROL_SWITCH_ON							0x0007		
 	#define	CAN_OPEN_CONTROL_DISABLE_VOLTAGE					0x0000
@@ -29,7 +29,7 @@
 	#define	CAN_OPEN_CONTROL_ENABLE_OPERATION					0x000F
 	#define	CAN_OPEN_CONTROL_FAULT_RESET						0x0080
 
-#define	CAN_OPEN_STATUS										0x6041	//	Unsigned 16bit,	RO
+#define	CAN_OPEN_STATUS										0x6041, 0x00	//	Unsigned 16bit,	RO
 	#define	CAN_OPEN_READY_TO_SWITCH_ON						0x0001
 	#define	CAN_OPEN_SWITCHED_ON								0x0002
 	#define	CAN_OPEN_OPERATION_ENABLE							0x0004

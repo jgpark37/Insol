@@ -32,8 +32,14 @@
 #include "stm32f1xx_hal.h"
 
 /* Private define ------------------------------------------------------------*/
-#define CAN_RX_STD_ID				0x60A
-#define CAN_TX_STD_ID				0x58A
+//#define RIGHT_SIDE					
+#ifdef RIGHT_SIDE
+#define CAN_RX_STD_ID				0x60A		//right
+#define CAN_TX_STD_ID				0x58A		//right
+#else
+#define CAN_RX_STD_ID				0x61A		//left
+#define CAN_TX_STD_ID				0x59A		//left
+#endif
 #define CAN_INSOL_SENSOR1		(CAN_TX_STD_ID+1)
 #define CAN_INSOL_SENSOR2		(CAN_INSOL_SENSOR1+1)
 #define CAN_INSOL_SENSOR3		(CAN_INSOL_SENSOR2+1)

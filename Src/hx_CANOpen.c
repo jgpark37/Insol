@@ -68,6 +68,10 @@ extern char CommonBuf[FLASH_PAGE_SIZE1*2];
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // CAN OPEN
+uint16_t CANOpen_GetIndex(uint16_t index , uint8_t subindex)
+{
+	return index;
+}
 
 void CANOpen_Control(CanOpenCommand *pCoc)
 {
@@ -93,8 +97,8 @@ void CANOpen_Control(CanOpenCommand *pCoc)
 			Insol_SetRunMode(RM_NORMAL_12BIT);
 
 		buf[cnt++] = WRITE_RESPONSE;
-		buf[cnt++] = (uint8_t)(CAN_OPEN_CONTROL&0x00FF);
-		buf[cnt++] = (uint8_t)(CAN_OPEN_CONTROL>>8);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)&0x00FF);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);
 		buf[cnt++] = (uint8_t)CAN_OPEN_ENABLE_OPERATION;
 		buf[cnt++] = 0;
 		//cnt = 5;
@@ -103,8 +107,8 @@ void CANOpen_Control(CanOpenCommand *pCoc)
 	case CAN_OPEN_DISABLE_OPERATION:
 		Insol_SetRunMode(RM_STANDBY);
 		buf[cnt++] = WRITE_RESPONSE;
-		buf[cnt++] = (uint8_t)(CAN_OPEN_CONTROL&0x00FF);
-		buf[cnt++] = (uint8_t)(CAN_OPEN_CONTROL>>8);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)&0x00FF);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);
 		buf[cnt++] = (uint8_t)CAN_OPEN_DISABLE_OPERATION;
 		buf[cnt++] = 0;
 		//cnt = 5;
@@ -114,8 +118,8 @@ void CANOpen_Control(CanOpenCommand *pCoc)
 		Insol.data.sendTime = (pCoc->data[1]<<8) | pCoc->data[0];
 		if (Insol.data.sendTime < 1) Insol.data.sendTime = 6;
 		buf[cnt++] = WRITE_RESPONSE;
-		buf[cnt++] = (uint8_t)(CAN_OPEN_CONTROL&0x00FF);
-		buf[cnt++] = (uint8_t)(CAN_OPEN_CONTROL>>8);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)&0x00FF);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);
 		buf[cnt++] = (uint8_t)CAN_OPEN_SET_INTERVAL_SEND_DATA;
 		buf[cnt++] = 0;
 		//cnt = 5;
@@ -124,8 +128,8 @@ void CANOpen_Control(CanOpenCommand *pCoc)
 	case CAN_OPEN_RUN_CALIBRATION:
 		Insol_RunMode_Calibration();
 		buf[cnt++] = WRITE_RESPONSE;
-		buf[cnt++] = (uint8_t)(CAN_OPEN_CONTROL&0x00FF);
-		buf[cnt++] = (uint8_t)(CAN_OPEN_CONTROL>>8);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)&0x00FF);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);
 		buf[cnt++] = (uint8_t)CAN_OPEN_RUN_CALIBRATION;
 		buf[cnt++] = 0;
 		//cnt = 5;
@@ -135,8 +139,8 @@ void CANOpen_Control(CanOpenCommand *pCoc)
 		Insol.can.txid = CAN_TX_STD_ID + pCoc->data[0];
 		Insol.can.rxid = CAN_RX_STD_ID + pCoc->data[0];
 		buf[cnt++] = WRITE_RESPONSE;
-		buf[cnt++] = (uint8_t)(CAN_OPEN_CONTROL&0x00FF);
-		buf[cnt++] = (uint8_t)(CAN_OPEN_CONTROL>>8);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)&0x00FF);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);
 		buf[cnt++] = (uint8_t)CAN_OPEN_SET_DEVICE_NUM;
 		if (Insol_SaveParamToFlash(CommonBuf)) buf[cnt++] = 0;
 		else buf[cnt++] = 1;
@@ -146,8 +150,8 @@ void CANOpen_Control(CanOpenCommand *pCoc)
 	case CAN_OPEN_SET_DATA_OUTPUT_TYPE:
 		Insol.data.outputType = pCoc->data[0];
 		buf[cnt++] = WRITE_RESPONSE;
-		buf[cnt++] = (uint8_t)(CAN_OPEN_CONTROL&0x00FF);
-		buf[cnt++] = (uint8_t)(CAN_OPEN_CONTROL>>8);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)&0x00FF);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);
 		buf[cnt++] = (uint8_t)CAN_OPEN_SET_DATA_OUTPUT_TYPE;
 		buf[cnt++] = 0;
 		//cnt = 5;
@@ -167,8 +171,8 @@ void CANOpen_Control(CanOpenCommand *pCoc)
 				Insol_SetRunMode(RM_NORMAL_12BIT);
 		}
 		buf[cnt++] = WRITE_RESPONSE;
-		buf[cnt++] = (uint8_t)(CAN_OPEN_CONTROL&0x00FF);
-		buf[cnt++] = (uint8_t)(CAN_OPEN_CONTROL>>8);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)&0x00FF);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);
 		buf[cnt++] = (uint8_t)CAN_OPEN_ENABLE_OPERATION;
 		buf[cnt++] = 0;
 		//cnt = 5;
@@ -179,8 +183,8 @@ void CANOpen_Control(CanOpenCommand *pCoc)
 		//Insol_GetSensorONNum(Insol.sensorONPos);
 		Insol_SetBufPtr(Insol.data.size, Insol.sensorONPos);
 		buf[cnt++] = WRITE_RESPONSE;
-		buf[cnt++] = (uint8_t)(CAN_OPEN_CONTROL&0x00FF);
-		buf[cnt++] = (uint8_t)(CAN_OPEN_CONTROL>>8);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)&0x00FF);
+		buf[cnt++] = (uint8_t)(CANOpen_GetIndex(CAN_OPEN_CONTROL)>>8);
 		buf[cnt++] = (uint8_t)CAN_OPEN_SEL_SENSOR_POS;
 		buf[cnt++] = 0;
 		//cnt = 5;
@@ -229,19 +233,18 @@ void CANOpen_Process(void)
 {
 	CanOpenCommand *pCoc;
 	
+	
 	if (CanInfo.rx.head == CanInfo.rx.tail) return;
 	
 	pCoc = (CanOpenCommand *)&CanInfo.rx.buf[CanInfo.rx.tail];
-	switch (pCoc->m_inx) {
-	case CAN_OPEN_CONTROL:
+	if (pCoc->m_inx == CANOpen_GetIndex(CAN_OPEN_CONTROL)) {
 		CANOpen_Control(pCoc);
-		break;
-	case CAN_OPEN_STATUS:
+	}
+	else if (pCoc->m_inx == CANOpen_GetIndex(CAN_OPEN_STATUS)) {
 		CANOpen_Status(pCoc);
-		break;
-	default:
+	}
+	else {
 		CANOpen_Ack();
-		break;
 	}
 
 	CanInfo.rx.tail++;
